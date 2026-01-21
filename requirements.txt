@@ -1,12 +1,12 @@
 # Telegram Bot
-aiogram==3.0.1           # versão 3.x mais compatível
+aiogram==3.1.1
 
-# API server (se for usar Webhooks)
-fastapi==0.100.0         # versão que funciona com typing-extensions 4.7.x
+# API server
+fastapi==0.109.1
 uvicorn==0.23.2
 
 # Pagamentos Mercado Pago
 mercadopago==2.3.0
 
-# Variáveis de ambiente (opcional para testes locais)
+# Variáveis de ambiente
 python-dotenv==1.0.0
