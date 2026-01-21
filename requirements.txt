@@ -4,13 +4,11 @@ uvicorn==0.23.2
 mercadopago==2.3.0
 python-dotenv==1.0.0
 
-# Dependências compatíveis com aiogram
 aiofiles>=23.2.1,<26.0
 aiohttp>=3.9.0,<4.0
 
-# Extras
 certifi>=2023.7.22
 magic-filter~=1.0.12
-pydantic<2.4,>=2.1.1
+# pydantic será instalado automaticamente compatível com aiogram
 typing-extensions>=4.8.0
 starlette<0.36.0,>=0.35.0
