@@ -3,7 +3,6 @@ import os
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import Update
-from aiogram.webhook.aiohttp import get_new_configured_app
 from aiogram import F
 from fastapi import FastAPI
 from aiogram.utils.executor import start_webhook
