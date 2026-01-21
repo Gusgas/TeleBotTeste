@@ -1,63 +1,32 @@
-# bot.py
-import asyncio
-import threading
-from fastapi import FastAPI, Request
+import os
 from aiogram import Bot, Dispatcher, types
+from aiogram.filters import Command
+from aiogram.types import Message
+from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
-# ===========================
-# Configurações do Telegram
-# ===========================
-TELEGRAM_TOKEN = "SEU_TELEGRAM_TOKEN"
-CHAT_ID = "SEU_CHAT_ID"
+# Pega o token das variáveis de ambiente
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+
+# Se não encontrar o token, encerra o bot com erro
+if not TELEGRAM_TOKEN:
+    raise ValueError("⚠️ Token do Telegram não encontrado! Configure a variável TELEGRAM_TOKEN no Render.")
 
 bot = Bot(token=TELEGRAM_TOKEN)
 dp = Dispatcher()
 
-# ===========================
-# Handlers do Telegram
-# ===========================
-@dp.message()
-async def handle_message(message: types.Message):
-    if message.text == "/start":
-        await message.answer("Bot iniciado! Enviará notificações de pagamentos.")
+# Comando /start
+@dp.message(Command("start"))
+async def start_command(message: Message):
+    await message.answer("Olá! Bot funcionando ✅")
 
-# ===========================
-# FastAPI app para webhooks
-# ===========================
-app = FastAPI()
+# Aqui você coloca seus handlers de pagamento ou outros comandos
+# Exemplo: Webhook de pagamento Mercado Pago
+# async def pagamento_handler(data):
+#     ...
 
-@app.post("/webhook")
-async def mp_webhook(request: Request):
-    data = await request.json()
-    print("Recebi notificação do Mercado Pago:", data)
-
-    try:
-        await bot.send_message(
-            chat_id=CHAT_ID,
-            text=f"Nova notificação de pagamento:\n{data}"
-        )
-    except Exception as e:
-        print("Erro ao enviar mensagem para Telegram:", e)
-
-    return {"status": "ok"}
-
-# ===========================
-# Função para rodar o bot
-# ===========================
-async def start_bot():
-    # Conecta o bot ao Dispatcher
-    dp.startup.register(lambda _: print("Bot do Telegram iniciado!"))
-    # Start polling
-    await dp.start_polling(bot)
-
-# ===========================
-# Rodar bot em thread separada
-# ===========================
-threading.Thread(target=lambda: asyncio.run(start_bot()), daemon=True).start()
-
-# ===========================
-# Roda FastAPI com Uvicorn
-# ===========================
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    import asyncio
+    from aiogram import F
+    
+    print("Bot iniciado com sucesso!")
+    asyncio.run(dp.start_polling(bot))
