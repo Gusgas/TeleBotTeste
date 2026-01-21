@@ -1,6 +1,12 @@
-aiogram==3.1.0
-fastapi==0.109.2
-uvicorn==0.24.0
-mercadopago==2.3.0
-python-dotenv==1.0.0
+# Telegram Bot
+aiogram==3.1.1
 
+# API server (se for usar FastAPI para Webhooks)
+fastapi==0.109.1
+uvicorn==0.23.2
+
+# Pagamentos Mercado Pago
+mercadopago==2.3.0
+
+# Variáveis de ambiente (apenas para testes locais)
+python-dotenv==1.0.0
