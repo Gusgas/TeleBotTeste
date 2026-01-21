@@ -12,3 +12,5 @@ magic-filter~=1.0.12
 # pydantic será instalado automaticamente compatível com aiogram
 typing-extensions>=4.8.0
 starlette<0.36.0,>=0.35.0
+
+gunicorn==21.2.0
