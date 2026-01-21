@@ -1,59 +1,60 @@
+import logging
 import os
-from fastapi import FastAPI, Request
-from aiogram import Bot, Dispatcher, types
-from aiogram.filters import Command
-from aiogram.types import Message
-from aiogram.dispatcher.fsm.storage.memory import MemoryStorage
+from aiogram import Bot, Dispatcher
+from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.types import Update
+from aiogram.webhook.aiohttp import get_new_configured_app
+from aiogram import F
+from fastapi import FastAPI
+from aiogram.utils.executor import start_webhook
+from aiogram.types import ParseMode
+from aiogram.filters import CommandStart
 
-# --------------------
-# Configurações
-# --------------------
-TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
-WEBHOOK_PATH = f"/webhook/{TELEGRAM_TOKEN}"
-WEBHOOK_URL = os.environ.get("WEBHOOK_URL")  # URL pública configurada no Telegram
+# Variáveis de ambiente
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")  # Assumindo que você está utilizando variáveis de ambiente
+WEBHOOK_HOST = os.getenv("WEBHOOK_HOST")  # A URL do seu domínio (render.com ou outro)
+WEBHOOK_PATH = f"/webhook/{TELEGRAM_TOKEN}"  # Caminho do webhook
+WEBHOOK_URL = f"{WEBHOOK_HOST}{WEBHOOK_PATH}"  # URL completa do webhook
 
-if not TELEGRAM_TOKEN or not WEBHOOK_URL:
-    raise RuntimeError("Telegram token ou webhook URL não configurados nas variáveis de ambiente!")
+# Configuração de logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-# --------------------
-# Inicialização
-# --------------------
-bot = Bot(token=TELEGRAM_TOKEN)
+# Inicialização do Bot e Dispatcher
+bot = Bot(token=TELEGRAM_TOKEN, parse_mode=ParseMode.HTML)
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
+
+# FastAPI app para gerenciar o Webhook
 app = FastAPI()
 
-# --------------------
-# Handlers
-# --------------------
-@dp.message(Command(commands=["start"]))
-async def cmd_start(message: Message):
-    await message.answer("Olá! Bot funcionando com Webhook 3.x 🟢")
+# Definindo o comportamento do /start
+@dp.message(CommandStart())
+async def cmd_start(message):
+    await message.answer("Olá! Eu sou um bot Telegram.")
 
-# --------------------
-# Webhook endpoint
-# --------------------
-@app.post(WEBHOOK_PATH)
-async def telegram_webhook(request: Request):
-    data = await request.json()
-    update = types.Update(**data)
-    await dp.feed_update(update)  # <-- 3.x usa feed_update
-    return {"ok": True}
+# Função para lidar com as atualizações do webhook
+@app.post("/webhook/{token}")
+async def telegram_webhook(update: Update):
+    if update.message:
+        logger.info(f"Nova mensagem de {update.message.from_user.full_name}")
+    await dp.feed_update(update)  # Processa a atualização de forma síncrona
+    return "OK"
 
-# --------------------
-# Start webhook (apenas para configuração inicial, Telegram precisa do set_webhook)
-# --------------------
-async def on_startup():
-    await bot.delete_webhook()  # remove webhook antigo
-    await bot.set_webhook(WEBHOOK_URL + WEBHOOK_PATH)
+# Função para configurar o webhook
+async def on_start():
+    # Configurando o webhook no Telegram
+    webhook = await bot.set_webhook(WEBHOOK_URL)
+    if webhook:
+        logger.info(f"Webhook configurado com sucesso para {WEBHOOK_URL}")
 
-@app.on_event("startup")
-async def startup_event():
-    await on_startup()
-
-# --------------------
-# Rodando localmente com Uvicorn (se precisar)
-# --------------------
+# Função para iniciar o webhook
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("bot:app", host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
+    start_webhook(
+        dispatcher=dp,
+        webhook_path=WEBHOOK_PATH,
+        on_start=on_start,
+        skip_updates=True,
+        host="0.0.0.0",
+        port=int(os.getenv("PORT", 8000)),
+    )
